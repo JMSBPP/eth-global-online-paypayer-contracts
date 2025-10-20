@@ -8,16 +8,35 @@ import {
     Multicaller
 } from "../PayPalOnChainApi.sol";
 
+import {IEulerRouter} from "euler-interfaces/IEulerRouter.sol";
 
 abstract contract PayerBase is IPayer {
+   
+    
     address public immutable PYUSDC;
+    address public immutable UNIT_OF_ACCOUNT;
+    address public immutable EVC;
+
+
 
     address public paypalOnChainApi;
+    address public eulerRouter;
 
     constructor(
-        address _PYUSDC,
+        address _PYUSDC, // NOTE: Payment token
+        address unitOfAccount, // NOTE: Unist of account, USDC by defualt
+        address _evc // NOTE: vault connector
     ) {
+
         PYUSDC = _PYUSDC;
+        UNIT_OF_ACCOUNT = unitOfAccount;
+        EVC = _evc;
+    }
+
+    function setRouter(
+        address _eulerRouter
+    ) external {
+        eulerRouter = _eulerRouter;
     }
 
  
@@ -27,37 +46,39 @@ abstract contract PayerBase is IPayer {
         paypalOnChainApi = _paypalOnChainApi;
     }
 
+
     function pay(
-        address payer, // NOTE: It can be msg.sender or any other address
-        address paymentToken,
-        uint256 amountToPay,
-        bytes32 recipientId,
-        address[] calldata paypalOnChainEndpoints,
-        bytes[] calldata frompyUSDCToPaypalContractCalls
-        uint256[] calldata values
+        PaymentCalldata calldata paymentCalldata,
+        OracleCalldata calldata oracleCalldata,
+        PayCalldata calldata payCalldata
+    
     ) external returns (
         uint256 paymentAmountPaidOnPYUSDC,
         bytes[] memory results
     ) {
         uint256 _beforePaymentPayerBalance = IERC20(PYUSDC).balanceOf(
-            payer
+            paymentCalldata.payer
         );
 
-        paymentAmountOnPYUSDC = _pay(paymentToken, amountToPay, recipiantId);
-        bool success = paymentAmountOnPYUSDC > uint256(0x00) && IERC20(PYUSDC).balanceOf(payer) - _beforePaymentPayerBalance >= paymentAmountOnPYUSDC;
+        paymentAmountOnPYUSDC = _pay(
+            paymentCalldata,
+            oracleCalldata
+        );
+
+        bool success = paymentAmountOnPYUSDC > uint256(0x00) && IERC20(PYUSDC).balanceOf(paymentCalldata.payer) - _beforePaymentPayerBalance >= paymentAmountOnPYUSDC;
         
         if (success) {
-            bytes[] memory results = Multicaller(paypalOnChainApi).aggregate(
-                paypalOnChainEndpoints,
-                frompyUSDCToPaypalContractCalls
-                values,
-                payable(payer)
+            bytes[] memory _results = Multicaller(paypalOnChainApi).aggregate(
+                payCalldata.paypalOnChainEndpoints,
+                payCalldata.frompyUSDCToPaypalContractCalls,
+                payCalldata.values,
+                payable(paymentCalldata.payer)
             );
             emit Payment(
-                payer,
-                paymentToken,
-                recipientId,
-                amountPaidOnPYUSDC,
+                paymentCalldata.payer,
+                paymentCalldata.paymentToken,
+                paymentCalldata.recipientId,
+                paymentAmountOnPYUSDC,
                 bytes("") // NOTE: This is a placeholder
             );
 
@@ -68,14 +89,24 @@ abstract contract PayerBase is IPayer {
 
 
     function _pay(
-        address payer,
-        address paymentToken,
-        uint256 amountToPay,
-        bytes32 recipiantId
+        PaymentCalldata calldata paymentCalldata,
+        OracleCalldata calldata oracleCalldata
     )internal  virtual returns (uint256 paymentAmountOnPYUSDC) {
         // NOTE: Here the calls until we reach the payment amount on PYUSDC
-        uint256 _paymentAmountOnPYUSDC;
-        paymentAmountOnPYUSDC = _paymentAmountOnPYUSDC;
+
+        // NOTE: The first thing is to check if the assset is quotable by the
+        //price oracle, 
+        uint256 quotedAmount = IEulerRouter(eulerRouter).getQuote(
+            paymentCalldata.amountToPay,
+            paymentCalldata.paymentToken,
+            UNIT_OF_ACCOUNT
+        );
+
+        // NOTE: Now we have this quotedAmount on the unit of acocunt token
+        // we send i
+
 
     }
+
+
 }

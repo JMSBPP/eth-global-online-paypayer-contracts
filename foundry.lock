@@ -1,39 +1,9 @@
 {
-  "lib/balancer-v3-monorepo": {
-    "rev": "15fec8cd044762942b8ebc357a5594e265096ba5"
-  },
-  "lib/morpho-blue": {
-    "tag": {
-      "name": "v1.0.0",
-      "rev": "55d2d99304fb3fb930c688462ae2ccabb1d533ad"
-    }
-  },
   "lib/v3-periphery": {
     "tag": {
       "name": "v1.3.0",
       "rev": "80f26c86c57b8a5e4b913f42844d4c8bd274d058"
     }
-  },
-  "lib/openzeppelin-contracts": {
-    "tag": {
-      "name": "v5.4.0",
-      "rev": "c64a1edb67b6e3f4a15cca8909c9482ad33a02b0"
-    }
-  },
-  "lib/euler-vault-kit": {
-    "rev": "5b98b42048ba11ae82fb62dfec06d1010c8e41e6"
-  },
-  "lib/multicaller": {
-    "tag": {
-      "name": "v1.3.2",
-      "rev": "b7ef620605f426a93406248dcb005f6cead30673"
-    }
-  },
-  "lib/euler-swap": {
-    "rev": "08e498ab2e74977f67647da368e314ac407c748d"
-  },
-  "lib/evk-periphery": {
-    "rev": "292c97d6c9d95be1865d62b4cd0a149c8feb08c3"
   },
   "lib/scaffold-balancer-v3": {
     "rev": "eda5171fb64c10d87afa988b86e061ec275f0430"
@@ -44,7 +14,40 @@
       "rev": "8e40513d678f392f398620b3ef2b418648b33e89"
     }
   },
+  "lib/euler-vault-scripts": {
+    "rev": "2ab9ab124d166c6caf745ad48e981f47f4b445b8"
+  },
+  "lib/morpho-blue": {
+    "tag": {
+      "name": "v1.0.0",
+      "rev": "55d2d99304fb3fb930c688462ae2ccabb1d533ad"
+    }
+  },
+  "lib/multicaller": {
+    "tag": {
+      "name": "v1.3.2",
+      "rev": "b7ef620605f426a93406248dcb005f6cead30673"
+    }
+  },
+  "lib/evk-periphery": {
+    "rev": "292c97d6c9d95be1865d62b4cd0a149c8feb08c3"
+  },
+  "lib/euler-vault-kit": {
+    "rev": "5b98b42048ba11ae82fb62dfec06d1010c8e41e6"
+  },
   "lib/euler-interfaces": {
     "rev": "7d4fa5cccd4e3f752c0f975056865864444f1d2d"
+  },
+  "lib/openzeppelin-contracts": {
+    "tag": {
+      "name": "v5.4.0",
+      "rev": "c64a1edb67b6e3f4a15cca8909c9482ad33a02b0"
+    }
+  },
+  "lib/euler-swap": {
+    "rev": "08e498ab2e74977f67647da368e314ac407c748d"
+  },
+  "lib/balancer-v3-monorepo": {
+    "rev": "15fec8cd044762942b8ebc357a5594e265096ba5"
   }
 }
