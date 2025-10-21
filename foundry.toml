@@ -11,7 +11,7 @@ remappings = [
     "multicaller/=lib/multicaller/src/",
     "@openzeppelin/=lib/openzeppelin-contracts/",
     "forge-std/=lib/forge-std",
-    "evk/=lib/euler-vault-kit/src/"
+    "evk/=lib/euler-vault-kit/src/",
     "euler-interfaces/=lib/euler-interfaces/interfaces/"
 ]
 

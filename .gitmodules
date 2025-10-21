@@ -22,3 +22,6 @@
 [submodule "lib/euler-vault-scripts"]
 	path = lib/euler-vault-scripts
 	url = https://github.com/euler-xyz/euler-vault-scripts
+[submodule "lib/v3-periphery"]
+	path = lib/v3-periphery
+	url = https://github.com/Uniswap/v3-periphery
