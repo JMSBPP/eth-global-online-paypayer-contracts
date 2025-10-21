@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {EVault} from "evk/EVault/EVault.sol";
-import {IPerspective} from "evk/Perspectives/implementation/interfaces/IPerspective.sol";
+
 
 
 // admin --> This is a Governor 
@@ -102,7 +102,7 @@ abstract contract pyUSDCPaymentsVault is EVault {
 
     constructor(
         Integrations memory integrations,
-        DeployedModules memory modules,
+        DeployedModules memory modules
     ) EVault(integrations, modules) {
     }
 }

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.27;
 
-import {IPayer} from "../interfaces/IPayer.sol";
+import {IPayer} from "./interfaces/IPayer.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {
     PayPalOnChainApi,
     Multicaller
-} from "../PayPalOnChainApi.sol";
+} from "./PayPalOnChainApi.sol";
 
 import {IEulerRouter} from "euler-interfaces/IEulerRouter.sol";
 
@@ -67,26 +67,28 @@ contract PayerClient is IPayer, AccessControl {
 
 
  
-        bool success = paymentAmountOnPYUSDC > uint256(0x00) && IERC20(PYUSDC).balanceOf(paymentCalldata.payer) - _beforePaymentPayerBalance >= paymentAmountOnPYUSDC;
+        // bool success = paymentAmountOnPYUSDC > uint256(0x00) && IERC20(PYUSDC).balanceOf(paymentCalldata.payer) - _beforePaymentPayerBalance >= paymentAmountOnPYUSDC;
         
-        if (success) {
-            bytes[] memory _results = Multicaller(paypalOnChainApi).aggregate(
-                paypalOnChainEndpoints,
-                frompyUSDCToPaypalContractCalls,
-                values,
-                payable(payer)
-            );
-            emit Payment(
-                payer,
-                paymentToken,
-                recipientId,
-                paymentAmountOnPYUSDC,
-                bytes("") // NOTE: This is a placeholder
-            );
+        // if (success) {
+        //     bytes[] memory _results = Multicaller(paypalOnChainApi).aggregate(
+        //         paypalOnChainEndpoints,
+        //         frompyUSDCToPaypalContractCalls,
+        //         values,
+        //         payable(payer)
+        //     );
+        //     emit Payment(
+        //         payer,
+        //         paymentToken,
+        //         recipientId,
+        //         paymentAmountOnPYUSDC,
+        //         bytes("") // NOTE: This is a placeholder
+        //     );
 
-        }
+        // }
 
-        return (paymentAmountOnPYUSDC, results);
+        bytes[] memory results = new bytes[](0);
+
+        return results;
     }
 
 

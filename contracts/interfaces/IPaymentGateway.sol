@@ -10,4 +10,6 @@ interface IPaymentGateway{
         uint256 amountToPay,
         bytes32 recipientId
     ) external returns(bytes[] memory res);
+
+    function setUnitOfAccount(address _unitOfAccount) external;
 }

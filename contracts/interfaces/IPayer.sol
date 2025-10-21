@@ -25,7 +25,6 @@ interface IPayer {
         bytes[] calldata frompyUSDCToPaypalContractCalls,
         uint256[] calldata values        
     ) external returns (
-        uint256 paymentAmountPaidOnPYUSDC,
         bytes[] memory results
     );
 }

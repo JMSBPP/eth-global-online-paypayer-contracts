@@ -9,10 +9,9 @@ evm_version = 'prague'
 remappings = [
     "@pythnetwork/pyth-sdk-solidity/=node_modules/@pythnetwork/pyth-sdk-solidity",
     "multicaller/=lib/multicaller/src/",
-    "@openzeppelin/=lib/openzeppelin-contracts/",
     "forge-std/=lib/forge-std",
-    "evk/=lib/euler-vault-kit/src/",
-    "euler-interfaces/=lib/euler-interfaces/interfaces/"
+    "euler-interfaces/=lib/euler-interfaces/interfaces/",
+    "euler-swap/=lib/euler-swap/"
 ]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
