@@ -10,6 +10,7 @@ import {ChainPriceOracle} from "../../contracts/ChainPriceOracle.sol";
 import {UniswapV3Oracle} from "euler-price-oracle/adapter/uniswap/UniswapV3Oracle.sol";
 import {PayerClient} from "../../contracts/PayerClient.sol";
 import {IChainPriceOracle} from "../../contracts/interfaces/IChainPriceOracle.sol";
+import {IPaymentGateway} from "../../contracts/interfaces/IPaymentGateway.sol";
 import "./ForkUtils.sol";
 import "euler-price-oracle-test/adapter/pyth/PythFeeds.sol";
 import "euler-price-oracle-test/utils/EthereumAddresses.sol";
@@ -50,8 +51,12 @@ contract Deployers is Test {
 
     }
 
-    function deployPaymentGateway(address _chainPriceOracle) public {
+    function deployPaymentGatewayAndSetAll(address _chainPriceOracle) public {
         paymentGateway = address(new PaymentGateway(_chainPriceOracle));
+        IPaymentGateway(paymentGateway).setGenericFactory(EVAULT_FACTORY);
+        IPaymentGateway(paymentGateway).setEscrowCollateralPerspective(
+            ESCROWED_COLLATERAL_PERSPECTIVE
+        );
     }
 
     function deployPayerClient(address _PYUSDC, address _paymentGateway) public {

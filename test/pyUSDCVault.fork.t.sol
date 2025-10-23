@@ -36,7 +36,7 @@ contract pyUSDCVaultForkTest is ForkTest, Deployers, DeployPermit2 {
         deployUniswapV3Oracle();
 
         deployChainOracleAndSetAll(PYUSDC, USD, USDC, PYTH_USDC_USD_FEED, uniswapV3Oracle, ORACLE_LENS, PYTH);
-        deployPaymentGateway(chainPriceOracle);
+        deployPaymentGatewayAndSetAll(chainPriceOracle);
         deployPayerClient(PYUSDC, paymentGateway);
         
         pyUSDCVault = 

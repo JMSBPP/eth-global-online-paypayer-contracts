@@ -19,19 +19,11 @@ import {FullMath} from "euler-swap/src/math/FullMath.sol";
 
 
 contract ChainPriceOracleForkTest is ForkTest, Deployers {
-    // uint256 constant MAX_STABLE_DELTA;
-    uint256 constant DEFAULT_PAYMENT_AMOUNT = 2500;
-    uint256 constant DECIMAL_OFFSET = 1e8;
-    // type(uint160).max / 1e8 -1 
-    uint256 constant MAX_PAYMENT_AMOUNT = 0x0000000000000000000000000000002af31dc4611873bf3f70834acdae9f0f4e;
-
     function setUp() public {
         _setUpFork(23626800);
 
         deployUniswapV3Oracle();
         deployChainOracleAndSetAll(PYUSDC, USD, USDC, PYTH_USDC_USD_FEED, uniswapV3Oracle, ORACLE_LENS, PYTH);
-        deployPaymentGateway(chainPriceOracle);
-        deployPayerClient(PYUSDC, paymentGateway);
 
     }
 

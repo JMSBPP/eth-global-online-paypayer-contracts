@@ -59,7 +59,7 @@ contract PaymentGateway is IPaymentGateway{
         escrowedCollateralPerspective = _escrowCollateralPerspective;
     }
 
-    function setpyUSDCVault(
+    function setPyUSDCVault(
         address _pyUSDCVault
     ) external {
         pyUSDCVault = _pyUSDCVault;
@@ -93,23 +93,21 @@ contract PaymentGateway is IPaymentGateway{
                     true,
                     abi.encodePacked(
                         address(paymentToken),
-                        chainPriceOracle, // NOTE: This is to be modified to have the registered
-                        // oralce registered on the oracle lens, periphery
-                        unitOfAccount
+                        address(0), // Escrow vaults must not have oracle
+                        address(0)  // Escrow vaults must not have unit of account
                     )
              );
 
              // NOTE: Escrow vaults must not have hook targets
              {
                 IEVault(paymentTokenVault).setHookConfig(address(0x00), 0);
-                IEVault(paymentTokenVault).setGovernorAdmin(address(0x00));
                 IEVault(paymentTokenVault).setInterestRateModel(address(0x00));
                 IEVault(paymentTokenVault).setFeeReceiver(address(0x00));
-                IEVault(paymentTokenVault).setSupplyCap(0);
-                IEVault(paymentTokenVault).setBorrowCap(0);
+                IEVault(paymentTokenVault).setCaps(0, 0);
                 IEVault(paymentTokenVault).setConfigFlags(0);
                 IEVault(paymentTokenVault).setMaxLiquidationDiscount(0);
                 IEVault(paymentTokenVault).setLiquidationCoolOffTime(0);
+                IEVault(paymentTokenVault).setGovernorAdmin(address(0x00));
              }
 
              IEscrowedCollateralPerspective(
@@ -117,6 +115,8 @@ contract PaymentGateway is IPaymentGateway{
              ).perspectiveVerify(paymentTokenVault, true);
 
         }
+
+        
 
     }
 }

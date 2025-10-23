@@ -2,7 +2,6 @@
 pragma solidity ^0.8.27;
 
 
-
 interface IPaymentGateway {
 
 
@@ -20,4 +19,18 @@ interface IPaymentGateway {
     function setEulerSwapFactory(
         address _eulerSwapFactory
     ) external;
+
+    function setGenericFactory(
+        address _genericFactory
+    ) external;
+
+    function setEscrowCollateralPerspective(
+        address _escrowCollateralPerspective
+    ) external;
+
+    function setPyUSDCVault(
+        address _pyUSDCVault
+    ) external;
+
+
 }
