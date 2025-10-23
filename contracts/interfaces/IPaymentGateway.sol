@@ -2,8 +2,12 @@
 pragma solidity ^0.8.27;
 
 
-interface IPaymentGateway{
-    
+
+interface IPaymentGateway {
+
+
+    error InsufficientBalance();
+
     function processPayment(
         address payer,
         address paymentToken,
@@ -12,4 +16,8 @@ interface IPaymentGateway{
     ) external returns(bytes[] memory res);
 
     function setUnitOfAccount(address _unitOfAccount) external;
+
+    function setEulerSwapFactory(
+        address _eulerSwapFactory
+    ) external;
 }

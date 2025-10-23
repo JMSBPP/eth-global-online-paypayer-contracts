@@ -92,19 +92,38 @@ contract ChainPriceOracle is IChainPriceOracle {
         return "ChainPriceOracle";
     }
 
-    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256 outAmount){
-        // NOTE: In this case quote is USD which is not an actual token, we need the oracle USD/USDC
+
+    // NOTE: This is the version that is used by most clients since the quote 
+    // token is known at all times 
+
+    function getQuote(
+        uint256 inAmount,
+        address paymentToken
+    ) external view returns (uint256 outAmount){
+        return _getQuote(inAmount, paymentToken);
+    }
+
+    function _getQuote(
+        uint256 inAmount,
+        address base
+    ) internal view returns(uint256 outAmount){
         bytes32 baseFeedId =  _validateAndGetBaseTokenFeedId(base);
         uint256 amountOutUnitOfAccount = _processQuote(baseFeedId, base, unitOfAccount, inAmount);
-
         uint256 amountOutUnitOfAccountToken = _processQuote(unitOfAccountTokenFeedId, unitOfAccount, unitOfAccountToken, amountOutUnitOfAccount);
-    
-
-       outAmount = IPriceOracle(paymentOracle).getQuote(
+        outAmount = IPriceOracle(paymentOracle).getQuote(
             amountOutUnitOfAccount,
             unitOfAccountToken,
             paymentToken
        );
+    
+    }
+
+
+
+    // NOTE: This is the version that is required for the IPriceOracle interface
+
+    function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256 outAmount){
+        return _getQuote(inAmount, base);        
     }
 
     function _validateAndGetBaseTokenFeedId(address _base) private view returns (bytes32 baseFeedId) {
