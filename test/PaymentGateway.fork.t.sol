@@ -39,12 +39,20 @@ contract PaymentGatewayForkTest is ForkTest, Deployers {
     }
 
     function test__unit__processPayment__mustCreateNewVaultForNewPaymentToken() external {
+        vm.startPrank(DAI_WHALE);
+
+        IERC20(DAI).approve(address(paymentGateway), DEFAULT_PAYMENT_AMOUNT*DECIMAL_OFFSET);
+        
         IPaymentGateway(paymentGateway).processPayment(
-            address(this),
+            DAI_WHALE,
             DAI,
-            DEFAULT_PAYMENT_AMOUNT,
+            DEFAULT_PAYMENT_AMOUNT*DECIMAL_OFFSET,
             bytes32(uint256(uint160(address(this))))
         );
+        
+
+        vm.stopPrank();
+
 
 
 

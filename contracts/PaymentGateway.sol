@@ -19,7 +19,7 @@ contract PaymentGateway is IPaymentGateway{
     address genericFactory;
     address pyUSDCVault;
     address escrowedCollateralPerspective;
-
+    address evc;
     
     // NOTE: Each payer has it's own registry of pools.
     //  This is each payer has a resgistry of valid tkens
@@ -36,6 +36,10 @@ contract PaymentGateway is IPaymentGateway{
 
     function setUnitOfAccount(address _unitOfAccount) external{
         unitOfAccount = _unitOfAccount;
+    }
+
+    function setEVC(address _evc) external{
+        evc = _evc;
     }
 
 
@@ -81,6 +85,29 @@ contract PaymentGateway is IPaymentGateway{
             unitOfAccount
         );
 
+        address paymentTokenVault = _getOrCreatePaymentTokenVault(
+            paymentToken
+        );
+
+        // NOTE: Transfer the payment token from the payer to this contract
+        IERC20(paymentToken).transferFrom(payer, address(this), amountToPay);
+        
+        // NOTE: Approve the vault to spend the tokens
+        IERC20(paymentToken).approve(paymentTokenVault, amountToPay);
+
+        // NOTE: Now we need to deposit the collateral that the payer holds
+        IEVault(paymentTokenVault).deposit(amountToPay, address(this));
+
+        // NOTE: With the collateral in the vault, we need to enable the pyUSDC vault to 
+        // allow the paymentVault to be used as collateral
+
+    
+    }
+
+    function _getOrCreatePaymentTokenVault(
+        address paymentToken
+    ) internal returns (address paymentTokenVault) {
+ 
         address paymentTokenVault = IEscrowedCollateralPerspective(
             escrowedCollateralPerspective
         ).singletonLookup(paymentToken);
@@ -116,9 +143,10 @@ contract PaymentGateway is IPaymentGateway{
 
         }
 
-        
-
+        return paymentTokenVault;
     }
+
+
 }
 
 

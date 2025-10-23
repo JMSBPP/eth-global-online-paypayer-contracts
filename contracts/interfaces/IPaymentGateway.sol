@@ -32,5 +32,6 @@ interface IPaymentGateway {
         address _pyUSDCVault
     ) external;
 
+    function setEVC(address _evc) external;
 
 }
