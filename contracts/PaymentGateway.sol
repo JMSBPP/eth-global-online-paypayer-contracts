@@ -10,6 +10,7 @@ import {IEVault} from "euler-interfaces/IEVault.sol";
 import {IEulerSwap} from "euler-swap/src/interfaces/IEulerSwap.sol";
 import {IEscrowedCollateralPerspective} from "euler-interfaces/IEscrowedCollateralPerspective.sol";
 import {GenericFactory} from "evk/GenericFactory/GenericFactory.sol";
+import {IEthereumVaultConnector, IEVC} from "euler-interfaces/IEthereumVaultConnector.sol";
 
 contract PaymentGateway is IPaymentGateway{
     
@@ -19,7 +20,7 @@ contract PaymentGateway is IPaymentGateway{
     address genericFactory;
     address pyUSDCVault;
     address escrowedCollateralPerspective;
-    address evc;
+    address payable evc;
     
     // NOTE: Each payer has it's own registry of pools.
     //  This is each payer has a resgistry of valid tkens
@@ -39,7 +40,7 @@ contract PaymentGateway is IPaymentGateway{
     }
 
     function setEVC(address _evc) external{
-        evc = _evc;
+        evc = payable(_evc);
     }
 
 
@@ -85,24 +86,91 @@ contract PaymentGateway is IPaymentGateway{
             unitOfAccount
         );
 
+
+
         address paymentTokenVault = _getOrCreatePaymentTokenVault(
             paymentToken
         );
+        _depositCollateral(
+            paymentToken,
+            paymentTokenVault,
+            payer,
+            amountToPay
+        );
 
-        // NOTE: Transfer the payment token from the payer to this contract
-        IERC20(paymentToken).transferFrom(payer, address(this), amountToPay);
+        _enableCollateralAndController(
+            payer,
+            paymentTokenVault,
+            pyUSDCVault
+        );
         
-        // NOTE: Approve the vault to spend the tokens
-        IERC20(paymentToken).approve(paymentTokenVault, amountToPay);
 
-        // NOTE: Now we need to deposit the collateral that the payer holds
-        IEVault(paymentTokenVault).deposit(amountToPay, address(this));
-
+     
         // NOTE: With the collateral in the vault, we need to enable the pyUSDC vault to 
         // allow the paymentVault to be used as collateral
 
+    }
+
+
+
+
+    function _enableCollateralAndController(
+        address _payer,
+        address _paymentTokenVault,
+        address _pyUSDCVault
+    ) internal {
+        IEVC.BatchItem[] memory batchItems = new IEVC.BatchItem[](2);
+        
+        batchItems[0] = IEVC.BatchItem({
+            targetContract: address(this),  // PaymentGateway as target
+            onBehalfOfAccount: _payer,      // payer as onBehalfOfAccount
+            value: 0,
+            data: abi.encodeCall(
+                this._enableCollateral,
+                (_payer, _paymentTokenVault)
+            )
+        });
+        
+        batchItems[1] = IEVC.BatchItem({
+            targetContract: address(this),  // PaymentGateway as target
+            onBehalfOfAccount: _payer,      // payer as onBehalfOfAccount
+            value: 0,
+            data: abi.encodeCall(
+                this._enableController,
+                (_payer, _pyUSDCVault)
+            )
+        });
+
+        IEthereumVaultConnector(evc).batch(batchItems);
+    }
+
+    function _enableCollateral(address payer, address vault) external {
+        IEthereumVaultConnector(evc).enableCollateral(payer, vault);
+    }
+
+    function _enableController(address payer, address vault) external {
+        IEthereumVaultConnector(evc).enableController(payer, vault);
+    }
+
+
+    function _depositCollateral(
+        address _paymentToken,
+        address _paymentTokenVault,
+        address _payer,
+        uint256 _amountToPay
+    ) private{
+           // NOTE: Transfer the payment token from the payer to this contract
+        IERC20(_paymentToken).transferFrom(_payer, address(this), _amountToPay);
+        
+        // NOTE: Approve the vault to spend the tokens
+        IERC20(_paymentToken).approve(_paymentTokenVault, _amountToPay);
+
+        // NOTE: Now we need to deposit the collateral that the payer holds
+        IEVault(_paymentTokenVault).deposit(_amountToPay, address(this));
     
     }
+
+
 
     function _getOrCreatePaymentTokenVault(
         address paymentToken

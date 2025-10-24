@@ -15,7 +15,7 @@ address constant DAI_USD_ORACLE = address(0x4E33D9874EbB7847C9C11E47aEEa8D3F215b
 address constant USDC_USD_ORACLE = address(0xC039229EBCef32f898031eB81f646880F39a190B);
 
 address constant DAI_WHALE = address(0x837c20D568Dfcd35E74E5CC0B8030f9Cebe10A28);
-address constant EVC = address(0x0C9a3dd6b8F28529d72d7f9cE918D493519EE383);
+address payable constant EVC = payable(address(0x0C9a3dd6b8F28529d72d7f9cE918D493519EE383));
 
 address constant BALANCE_TRACKER = address(0x0D52d06ceB8Dcdeeb40Cfd9f17489B350dD7F8a3);
 

@@ -16,7 +16,6 @@ import "../lib/euler-vault-kit/test/unit/evault/EVaultTestBase.t.sol";
 
 import "permit2/test/utils/DeployPermit2.sol";
 
-
 import {IEVault} from "../lib/euler-vault-kit/src/EVault/IEVault.sol";
 
 contract pyUSDCVaultForkTest is ForkTest, Deployers, DeployPermit2 {
@@ -40,6 +39,7 @@ contract pyUSDCVaultForkTest is ForkTest, Deployers, DeployPermit2 {
         deployPayerClient(PYUSDC, paymentGateway);
         
         pyUSDCVault = 
+
             GenericFactory(EVAULT_FACTORY).createProxy(
                 EVAULT_IMPLEMENTATION,
                 true,
@@ -54,16 +54,6 @@ contract pyUSDCVaultForkTest is ForkTest, Deployers, DeployPermit2 {
         IEVault(pyUSDCVault).setMaxLiquidationDiscount(0.2e4);
         IEVault(pyUSDCVault).setFeeReceiver(feeReceiver);
         IEVault(pyUSDCVault).setInterestFee(1e4);
-// function setCaps(uint16 supplyCap, uint16 borrowCap) external;
-// function setConfigFlags(uint32 newConfigFlags) external;
-// function setFeeReceiver(address newFeeReceiver) external;
-// function setGovernorAdmin(address newGovernorAdmin) external;
-// function setHookConfig(address newHookTarget, uint32 newHookedOps) external;
-// function setInterestFee(uint16 newFee) external;
-// function setInterestRateModel(address newModel) external;
-// function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) external;
-// function setLiquidationCoolOffTime(uint16 newCoolOffTime) external;
-// function setMaxLiquidationDiscount(uint16 newDiscount) external;
     }
 
 

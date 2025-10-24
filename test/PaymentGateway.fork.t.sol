@@ -18,7 +18,7 @@ import {IPaymentGateway} from "../contracts/interfaces/IPaymentGateway.sol";
 
 contract PaymentGatewayForkTest is ForkTest, Deployers {
 
-
+    address pyUsdcVault;
     function setUp() public {
         _setUpFork(23626800);
 
@@ -35,6 +35,17 @@ contract PaymentGatewayForkTest is ForkTest, Deployers {
         );
 
         deployPaymentGatewayAndSetAll(chainPriceOracle);
+        pyUsdcVault = deploypyUSDCVault(
+            EVC,
+            address(this),
+            uint256(0x00),
+            chainPriceOracle,
+            PYUSDC,
+            USDC  
+        );
+
+
+        IPaymentGateway(paymentGateway).setPyUSDCVault(pyUsdcVault);
     
     }
 
@@ -43,11 +54,24 @@ contract PaymentGatewayForkTest is ForkTest, Deployers {
 
         IERC20(DAI).approve(address(paymentGateway), DEFAULT_PAYMENT_AMOUNT*DECIMAL_OFFSET);
         
-        IPaymentGateway(paymentGateway).processPayment(
+        IEthereumVaultConnector(EVC).setAccountOperator(
             DAI_WHALE,
-            DAI,
-            DEFAULT_PAYMENT_AMOUNT*DECIMAL_OFFSET,
-            bytes32(uint256(uint160(address(this))))
+            paymentGateway,
+            true
+        );
+
+        IEthereumVaultConnector(payable(EVC)).call(
+            address(paymentGateway),
+            DAI_WHALE,
+            uint256(0x00),
+            abi.encodeCall(
+                IPaymentGateway.processPayment,
+                (
+                    DAI_WHALE,
+                    DAI,
+                    DEFAULT_PAYMENT_AMOUNT*DECIMAL_OFFSET,
+                    bytes32(uint256(uint160(address(this))))                )
+            )
         );
         
 

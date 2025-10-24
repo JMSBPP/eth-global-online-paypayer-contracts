@@ -14,6 +14,8 @@ import {IPaymentGateway} from "../../contracts/interfaces/IPaymentGateway.sol";
 import "./ForkUtils.sol";
 import "euler-price-oracle-test/adapter/pyth/PythFeeds.sol";
 import "euler-price-oracle-test/utils/EthereumAddresses.sol";
+import {GenericFactory} from "../../lib/euler-vault-kit/test/unit/evault/EVaultTestBase.t.sol";
+import {IEthereumVaultConnector} from "euler-interfaces/IEthereumVaultConnector.sol";
 
 contract Deployers is Test {
 
@@ -51,16 +53,45 @@ contract Deployers is Test {
 
     }
 
-    function deployPaymentGatewayAndSetAll(address _chainPriceOracle) public {
+    function deployPaymentGatewayAndSetAll(address _chainPriceOracle) internal {
         paymentGateway = address(new PaymentGateway(_chainPriceOracle));
         IPaymentGateway(paymentGateway).setGenericFactory(EVAULT_FACTORY);
         IPaymentGateway(paymentGateway).setEscrowCollateralPerspective(
             ESCROWED_COLLATERAL_PERSPECTIVE
         );
+        IPaymentGateway(paymentGateway).setEVC(EVC);
+    
     }
 
-    function deployPayerClient(address _PYUSDC, address _paymentGateway) public {
+    function deployPayerClient(address _PYUSDC, address _paymentGateway) internal {
         payerClient = address(new PayerClient(_PYUSDC, _paymentGateway));
+    }
+
+    function deploypyUSDCVault(
+        address _evc,
+        address vaultDeployer,
+        uint256 value,
+        address oracle,
+        address _pyusdc,
+        address _unitOfAccount
+    ) internal returns (address _pyUsdcVault) {
+        IEthereumVaultConnector(payable(_evc)).call(
+            EVAULT_FACTORY,
+            vaultDeployer,
+            value,
+            abi.encodeCall(
+                GenericFactory.createProxy,
+                (
+                    EVAULT_IMPLEMENTATION,
+                    true,
+                    abi.encodePacked(
+                        _pyusdc,
+                        oracle,
+                        _unitOfAccount
+                    )
+                )
+            )
+        );
     }
 
 
