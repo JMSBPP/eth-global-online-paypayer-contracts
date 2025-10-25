@@ -7,17 +7,33 @@ struct PayPalOnChainData{
     uint256[] values;
 }
 
-address constant PYUSDC = address(0x6c3ea9036406852006290770BEdFcAbA0e23A0e8);
 
 address constant UNISWAP_V3_SWAP_ROUTER = address(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 address constant UNISWAP_V3_QUOTER = address(0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6);
-address constant PYUSD_USDC_POOL = address(0x13394005C1012e708fCe1EB974F1130fDc73a5Ce);
 address constant ORACLE_LENS = address(0x30E6dFB84782A31d561536f64F47231451F7b48A);
 
+//=====================================DAI===============================================
+address constant DAI_WHALE = address(0x837c20D568Dfcd35E74E5CC0B8030f9Cebe10A28);
 address constant DAI_USD_ORACLE = address(0x4E33D9874EbB7847C9C11E47aEEa8D3F215bF676);
 address constant USDC_USD_ORACLE = address(0xC039229EBCef32f898031eB81f646880F39a190B);
 
-address constant DAI_WHALE = address(0x837c20D568Dfcd35E74E5CC0B8030f9Cebe10A28);
+
+//=====================================USDT=================================================
+// address constant USDT_WHALE = address(0x837c20D568Dfcd35E74E5CC0B8030f9Cebe10A28);
+// address constant USDT_USD_ORACLE = address(0x4E33D9874EbB7847C9C11E47aEEa8D3F215bF676);
+
+
+//=======================================ETH=====================================================
+address constant ETH_WHALE = address(0x1b3cB81E51011b549d78bf720b0d924ac763A7C2);
+address constant ETH = address(0x00);
+
+
+// ==================================PYUSD======================================================
+address constant PYUSD_WHALE = address(0x779224df1c756b4EDD899854F32a53E8c2B2ce5d);
+address constant PYUSD_USDC_POOL = address(0x13394005C1012e708fCe1EB974F1130fDc73a5Ce);
+
+
+
 address payable constant EVC = payable(address(0x0C9a3dd6b8F28529d72d7f9cE918D493519EE383));
 
 address constant BALANCE_TRACKER = address(0x0D52d06ceB8Dcdeeb40Cfd9f17489B350dD7F8a3);
@@ -35,8 +51,7 @@ address constant ESCROWED_COLLATERAL_PERSPECTIVE = address(0x4e58BBEa423c4B9A2Fc
 
 
 // uint256 constant MAX_STABLE_DELTA;
-uint256 constant DEFAULT_PAYMENT_AMOUNT = 2500;
-uint256 constant DECIMAL_OFFSET = 1e8;
+uint256 constant DEFAULT_PAYMENT_AMOUNT = 100e18;
 // type(uint160).max / 1e8 -1 
 uint256 constant MAX_PAYMENT_AMOUNT = 0x0000000000000000000000000000002af31dc4611873bf3f70834acdae9f0f4e;
 

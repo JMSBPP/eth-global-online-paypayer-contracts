@@ -4,19 +4,28 @@ pragma solidity ^0.8.27;
 
 interface IPayee {
     
-    event PaymentReceived(
+    event PaymentClaimed(
         address indexed sender,
+        address indexed payee,
+        address indexed destination,
         uint256 amountReceived
     );
 
-    function receivePayment(
-        bytes32 recipientId
+    function claimPayment(
+        address payee,
+        address payer,
+        uint256 amount,
+        address destination
     ) external;
 
-    function setPayee(
-        bytes32 recipientId,
+    
+
+
+    function hasQueuedPayments(
         address payee
-    ) external;
+    ) external view returns (bool);
+
+
 
 
 }

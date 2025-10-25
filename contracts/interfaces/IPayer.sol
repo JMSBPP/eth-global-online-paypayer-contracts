@@ -10,7 +10,7 @@ interface IPayer {
     event Payment(
         address indexed sender,
         address indexed paymentToken,
-        bytes32 indexed recipiantId,
+        address indexed payee,
         uint256 amountPaid,
         bytes additionalData
     );
@@ -20,9 +20,9 @@ interface IPayer {
         address payer,
         address paymentToken,
         uint256 amountToPay,
-        bytes32 recipientId, // NOTE: It can be msg.sender or any other addres
+        address payee, // NOTE: It can be msg.sender or any other addres
         address[] calldata paypalOnChainEndpoints,
         bytes[] calldata frompyUSDCToPaypalContractCalls,
         uint256[] calldata values        
-    ) external;
+    ) external payable;
 }
