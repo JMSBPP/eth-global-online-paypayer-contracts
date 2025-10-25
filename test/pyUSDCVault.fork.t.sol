@@ -35,25 +35,25 @@ contract pyUSDCVaultForkTest is ForkTest, Deployers, DeployPermit2 {
         deployUniswapV3Oracle();
 
         deployChainOracleAndSetAll(PYUSDC, USD, USDC, PYTH_USDC_USD_FEED, uniswapV3Oracle, ORACLE_LENS, PYTH);
-        deployPaymentGatewayAndSetAll(chainPriceOracle);
+        // deployPaymentGatewayAndSetAll(chainPriceOracle);
         deployPayerClient(PYUSDC, paymentGateway);
         
-        pyUSDCVault = 
+        // pyUSDCVault = 
 
-            GenericFactory(EVAULT_FACTORY).createProxy(
-                EVAULT_IMPLEMENTATION,
-                true,
-                abi.encodePacked(
-                    PYUSDC,
-                    chainPriceOracle,
-                    USDC
-                )
-            );
-        IEVault(pyUSDCVault).setHookConfig(address(0), 0);
-        IEVault(pyUSDCVault).setInterestRateModel(address(new IRMTestDefault()));
-        IEVault(pyUSDCVault).setMaxLiquidationDiscount(0.2e4);
-        IEVault(pyUSDCVault).setFeeReceiver(feeReceiver);
-        IEVault(pyUSDCVault).setInterestFee(1e4);
+        //     GenericFactory(EVAULT_FACTORY).createProxy(
+        //         EVAULT_IMPLEMENTATION,
+        //         true,
+        //         abi.encodePacked(
+        //             PYUSDC,
+        //             chainPriceOracle,
+        //             USDC
+        //         )
+        //     );
+        // IEVault(pyUSDCVault).setHookConfig(address(0), 0);
+        // IEVault(pyUSDCVault).setInterestRateModel(address(new IRMTestDefault()));
+        // IEVault(pyUSDCVault).setMaxLiquidationDiscount(0.2e4);
+        // IEVault(pyUSDCVault).setFeeReceiver(feeReceiver);
+        // IEVault(pyUSDCVault).setInterestFee(1e4);
     }
 
 

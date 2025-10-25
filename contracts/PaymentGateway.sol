@@ -12,11 +12,17 @@ import {IEscrowedCollateralPerspective} from "euler-interfaces/IEscrowedCollater
 import {GenericFactory} from "evk/GenericFactory/GenericFactory.sol";
 import {IEthereumVaultConnector, IEVC} from "euler-interfaces/IEthereumVaultConnector.sol";
 
+import {FullMath} from "euler-swap/src/math/FullMath.sol";
+
 contract PaymentGateway is IPaymentGateway{
-    
+    address immutable EVAULT_IMPLEMENTATION;
+    address immutable UNDERLYING_TOKEN;
+    address immutable EVAULT_FACTORY;
+    address immutable UNSIWAP_V3_ROUTER;
+
+
     address chainPriceOracle;
     address unitOfAccount;
-    address eulerSwapFactory;
     address genericFactory;
     address pyUSDCVault;
     address escrowedCollateralPerspective;
@@ -27,30 +33,33 @@ contract PaymentGateway is IPaymentGateway{
     // they have enable per payment. This is becase liquidity provision is only allowed 
     // by one euler account
 
-    // NOTE: This
 
-    mapping(address payer => mapping(address paymentAsset => address eulerSwapPool)) payerPoolMap;
 
-    constructor(address _chainPriceOracle){
-        chainPriceOracle = _chainPriceOracle;
+    constructor(
+        address _evaultImplementation,
+        address _underlyingToken,
+        address _evc,
+        address _evaultFactory,
+        address _uniswapV3Router
+    ){
+        EVAULT_IMPLEMENTATION = _evaultImplementation;
+        UNDERLYING_TOKEN = _underlyingToken;
+        EVAULT_FACTORY = _evaultFactory;
+        evc = payable(_evc);
+        UNSIWAP_V3_ROUTER = _uniswapV3Router;
     }
 
     function setUnitOfAccount(address _unitOfAccount) external{
         unitOfAccount = _unitOfAccount;
     }
 
-    function setEVC(address _evc) external{
-        evc = payable(_evc);
+    function setChainPriceOracle(address _chainPriceOracle) external{
+        chainPriceOracle = _chainPriceOracle;
     }
 
 
     // TODO: This function needs to be guarded
 
-    function setEulerSwapFactory(
-        address _eulerSwapFactory
-    ) external {
-        eulerSwapFactory = _eulerSwapFactory;
-    }
 
     function setGenericFactory(
         address _genericFactory
@@ -64,11 +73,6 @@ contract PaymentGateway is IPaymentGateway{
         escrowedCollateralPerspective = _escrowCollateralPerspective;
     }
 
-    function setPyUSDCVault(
-        address _pyUSDCVault
-    ) external {
-        pyUSDCVault = _pyUSDCVault;
-    }
 
 
     // NOTE: This is the main fucntion
@@ -87,70 +91,79 @@ contract PaymentGateway is IPaymentGateway{
         );
 
 
+        (address paymentTokenVault, address pyUSDCVault) = (_getOrCreatePaymentTokenVault(paymentToken), _getOrDeployPyUSDCVault(amountToPaypyUSDC));
 
-        address paymentTokenVault = _getOrCreatePaymentTokenVault(
-            paymentToken
-        );
-        _depositCollateral(
+        // NOTE: getQuote guaranteees that there is a reliable market for the token that accurately quotes
+        // it against the USDC
+
+        // NOTE: What now needs to be done is to create a market on euler swap for the pair
+
+        // (token, pyUSDC), We have as utils (price_{pyUSDC/token} and the pair (pyUSDC, USDC))
+        _getOrCreateEulerSwapMarket(
             paymentToken,
-            paymentTokenVault,
-            payer,
-            amountToPay
-        );
-
-        _enableCollateralAndController(
-            payer,
+            amountToPay,
+            amountToPaypyUSDC,
             paymentTokenVault,
             pyUSDCVault
         );
-        
 
-     
-        // NOTE: With the collateral in the vault, we need to enable the pyUSDC vault to 
-        // allow the paymentVault to be used as collateral
+
+
+
+
+        // NOTE: Here we do the swap
+    
+
+
+
+        // NOTE: The paymentTokenVault is now enabled as collateral for the pyUSDCVault
+        // and 
+
+
+
+        
 
     }
 
-
-
-
-    function _enableCollateralAndController(
-        address _payer,
+    function _getOrCreateEulerSwapMarket(
+        address _paymentToken,
+        uint256 _amountToPay,
+        uint256 _amountToPaypyUSDC,
         address _paymentTokenVault,
         address _pyUSDCVault
-    ) internal {
-        IEVC.BatchItem[] memory batchItems = new IEVC.BatchItem[](2);
-        
-        batchItems[0] = IEVC.BatchItem({
-            targetContract: address(this),  // PaymentGateway as target
-            onBehalfOfAccount: _payer,      // payer as onBehalfOfAccount
-            value: 0,
-            data: abi.encodeCall(
-                this._enableCollateral,
-                (_payer, _paymentTokenVault)
-            )
-        });
-        
-        batchItems[1] = IEVC.BatchItem({
-            targetContract: address(this),  // PaymentGateway as target
-            onBehalfOfAccount: _payer,      // payer as onBehalfOfAccount
-            value: 0,
-            data: abi.encodeCall(
-                this._enableController,
-                (_payer, _pyUSDCVault)
-            )
+    ) private returns (address _eulerSwapPool){
+        IEulerSwap.StaticParams memory marketMetadata = IEulerSwap.StaticParams({
+            supplyVault0: _paymentTokenVault,
+            supplyVault1: _pyUSDCVault,
+            borrowVault0: address(0x00),
+            borrowVault1: address(0x00),
+            eulerAccount: address(this),
+            feeRecipient: address(this),
+            protocolFeeRecipient: address(this),
+            protocolFee: 0 // TODO: This is to be determined
         });
 
-        IEthereumVaultConnector(evc).batch(batchItems);
+        uint256 priceX = FullMath.mulDiv(1e18, _amountToPaypyUSDC, _amountToPay);
+
+        IEulerSwap.DynamicParams memory marketDynamicParams = IEulerSwap.DynamicParams({
+            equilibriumReserve0: _amountToPay,
+            equilibriumReserve1: _amountToPaypyUSDC,
+            minReserve0: 0,
+            minReserve1: 0,
+            priceX: 1e18,
+            priceY: 1e18,
+            concentrationX: 1e18,
+            concentrationY: 1e18,
+            fee0: 0,
+            fee1: 0,
+            expiration: 0,
+            swapHookedOperations: 0,
+            swapHook: address(0x00)
+        });
+
+
     }
 
-    function _enableCollateral(address payer, address vault) external {
-        IEthereumVaultConnector(evc).enableCollateral(payer, vault);
-    }
-
-    function _enableController(address payer, address vault) external {
-        IEthereumVaultConnector(evc).enableController(payer, vault);
-    }
 
 
     function _depositCollateral(
@@ -167,27 +180,29 @@ contract PaymentGateway is IPaymentGateway{
 
         // NOTE: Now we need to deposit the collateral that the payer holds
         IEVault(_paymentTokenVault).deposit(_amountToPay, address(this));
+
     
     }
 
 
 
-    function _getOrCreatePaymentTokenVault(
-        address paymentToken
-    ) internal returns (address paymentTokenVault) {
- 
-        address paymentTokenVault = IEscrowedCollateralPerspective(
+    function _getOrCreateEscrowVaultVault(
+        address _underlyingToken
+    ) internal returns (address _escrowVault) {
+
+
+        address _escrowVault = IEscrowedCollateralPerspective(
             escrowedCollateralPerspective
-        ).singletonLookup(paymentToken);
+        ).singletonLookup(_underlyingToken);
 
         // NOTE: This token has not been used as payment yet
 
         if (paymentTokenVault == address(0x00)) {
-            paymentTokenVault = GenericFactory(genericFactory).createProxy(
+            _escrowVault = GenericFactory(genericFactory).createProxy(
                     address(0),
                     true,
                     abi.encodePacked(
-                        address(paymentToken),
+                        _underlyingToken,
                         address(0), // Escrow vaults must not have oracle
                         address(0)  // Escrow vaults must not have unit of account
                     )
@@ -195,23 +210,26 @@ contract PaymentGateway is IPaymentGateway{
 
              // NOTE: Escrow vaults must not have hook targets
              {
-                IEVault(paymentTokenVault).setHookConfig(address(0x00), 0);
-                IEVault(paymentTokenVault).setInterestRateModel(address(0x00));
-                IEVault(paymentTokenVault).setFeeReceiver(address(0x00));
-                IEVault(paymentTokenVault).setCaps(0, 0);
-                IEVault(paymentTokenVault).setConfigFlags(0);
-                IEVault(paymentTokenVault).setMaxLiquidationDiscount(0);
-                IEVault(paymentTokenVault).setLiquidationCoolOffTime(0);
-                IEVault(paymentTokenVault).setGovernorAdmin(address(0x00));
+                IEVault(_escrowVault).setHookConfig(address(0x00), 0);
+                IEVault(_escrowVault).setInterestRateModel(address(0x00));
+                IEVault(_escrowVault).setFeeReceiver(address(0x00));
+                IEVault(_escrowVault).setCaps(0, 0);
+                IEVault(_escrowVault).setConfigFlags(0);
+                IEVault(_escrowVault).setMaxLiquidationDiscount(0);
+                IEVault(_escrowVault).setLiquidationCoolOffTime(0);
+                IEVault(_escrowVault).setGovernorAdmin(address(0x00));
              }
 
              IEscrowedCollateralPerspective(
                 escrowedCollateralPerspective
-             ).perspectiveVerify(paymentTokenVault, true);
+             ).perspectiveVerify(_escrowVault, true);
+
+             escrowVault = _escrowVault;
 
         }
+        
 
-        return paymentTokenVault;
+        return _escrowVault;
     }
 
 

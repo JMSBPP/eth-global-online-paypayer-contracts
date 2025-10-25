@@ -28,13 +28,16 @@ interface IPaymentGateway {
         address _escrowCollateralPerspective
     ) external;
 
-    function setPyUSDCVault(
-        address _pyUSDCVault
+
+    function setChainPriceOracle(
+        address _chainPriceOracle
     ) external;
 
-    function setEVC(address _evc) external;
-
     
+
+
+
+
 
     
 

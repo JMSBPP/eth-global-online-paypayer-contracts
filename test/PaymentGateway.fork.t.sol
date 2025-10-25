@@ -34,18 +34,9 @@ contract PaymentGatewayForkTest is ForkTest, Deployers {
             PYTH
         );
 
-        deployPaymentGatewayAndSetAll(chainPriceOracle);
-        pyUsdcVault = deploypyUSDCVault(
-            EVC,
-            address(this),
-            uint256(0x00),
-            chainPriceOracle,
-            PYUSDC,
-            USDC  
-        );
+        deployPaymentGatewayAndSetAll();
 
 
-        IPaymentGateway(paymentGateway).setPyUSDCVault(pyUsdcVault);
     
     }
 

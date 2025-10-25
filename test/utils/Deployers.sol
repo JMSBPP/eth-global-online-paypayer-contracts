@@ -53,46 +53,22 @@ contract Deployers is Test {
 
     }
 
-    function deployPaymentGatewayAndSetAll(address _chainPriceOracle) internal {
-        paymentGateway = address(new PaymentGateway(_chainPriceOracle));
+    function deployPaymentGatewayAndSetAll() internal {
+        paymentGateway = address(new PaymentGateway(EVAULT_IMPLEMENTATION, PYUSDC, EVC, EVAULT_FACTORY));
         IPaymentGateway(paymentGateway).setGenericFactory(EVAULT_FACTORY);
         IPaymentGateway(paymentGateway).setEscrowCollateralPerspective(
             ESCROWED_COLLATERAL_PERSPECTIVE
         );
-        IPaymentGateway(paymentGateway).setEVC(EVC);
-    
+        IPaymentGateway(paymentGateway).setChainPriceOracle(chainPriceOracle);
+        IPaymentGateway(paymentGateway).setUnitOfAccount(USDC);
+
     }
 
     function deployPayerClient(address _PYUSDC, address _paymentGateway) internal {
         payerClient = address(new PayerClient(_PYUSDC, _paymentGateway));
     }
 
-    function deploypyUSDCVault(
-        address _evc,
-        address vaultDeployer,
-        uint256 value,
-        address oracle,
-        address _pyusdc,
-        address _unitOfAccount
-    ) internal returns (address _pyUsdcVault) {
-        IEthereumVaultConnector(payable(_evc)).call(
-            EVAULT_FACTORY,
-            vaultDeployer,
-            value,
-            abi.encodeCall(
-                GenericFactory.createProxy,
-                (
-                    EVAULT_IMPLEMENTATION,
-                    true,
-                    abi.encodePacked(
-                        _pyusdc,
-                        oracle,
-                        _unitOfAccount
-                    )
-                )
-            )
-        );
-    }
+        
 
 
 
