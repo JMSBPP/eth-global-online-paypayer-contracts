@@ -8,7 +8,7 @@ import {Test} from "forge-std/Test.sol";
 import {PaymentGateway} from "../../contracts/PaymentGateway.sol";
 import {ChainPriceOracle} from "../../contracts/ChainPriceOracle.sol";
 import {UniswapV3Oracle} from "euler-price-oracle/adapter/uniswap/UniswapV3Oracle.sol";
-import {PayerClient} from "../../contracts/PayerClient.sol";
+import {Client} from "../../contracts/Client.sol";
 import {IChainPriceOracle} from "../../contracts/interfaces/IChainPriceOracle.sol";
 import {IPaymentGateway} from "../../contracts/interfaces/IPaymentGateway.sol";
 import "./ForkUtils.sol";
@@ -22,7 +22,7 @@ contract Deployers is Test {
     address uniswapV3Oracle;
     address chainPriceOracle;
     address paymentGateway;
-    address payerClient;
+    address client;
 
     function deployUniswapV3Oracle() public {
         uniswapV3Oracle = address(new UniswapV3Oracle(USDC, PYUSDC, 100, 15 minutes, UNISWAP_V3_FACTORY));
@@ -54,7 +54,17 @@ contract Deployers is Test {
     }
 
     function deployPaymentGatewayAndSetAll() internal {
-        paymentGateway = address(new PaymentGateway(EVAULT_IMPLEMENTATION, PYUSDC, EVC, EVAULT_FACTORY));
+        paymentGateway = address(
+            new PaymentGateway(
+                EVAULT_IMPLEMENTATION,
+                PYUSDC,
+                EVC,
+                EVAULT_FACTORY,
+                UNISWAP_V3_SWAP_ROUTER,
+                UNISWAP_V3_QUOTER
+            )
+        );
+        
         IPaymentGateway(paymentGateway).setGenericFactory(EVAULT_FACTORY);
         IPaymentGateway(paymentGateway).setEscrowCollateralPerspective(
             ESCROWED_COLLATERAL_PERSPECTIVE
@@ -64,8 +74,8 @@ contract Deployers is Test {
 
     }
 
-    function deployPayerClient(address _PYUSDC, address _paymentGateway) internal {
-        payerClient = address(new PayerClient(_PYUSDC, _paymentGateway));
+    function deployClient(address _paymentGateway) internal {
+        client = address(new Client(_paymentGateway));
     }
 
         

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.27;
 
 import {IPayer} from "./interfaces/IPayer.sol";
+import {IPayee} from "./interfaces/IPayee.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {
     PayPalOnChainApi,
@@ -13,21 +14,24 @@ import {IEulerRouter} from "euler-interfaces/IEulerRouter.sol";
 import {IPaymentGateway} from "./interfaces/IPaymentGateway.sol";
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract PayerClient is IPayer, AccessControl {
-    address public immutable PYUSDC;
+contract Client is IPayer, IPayee, AccessControl {
     
+
+
+    mapping(bytes32 => address) public payees;
 
 
     address public paypalOnChainApi;
     address public paymentGateway;
 
+
+
+    error PayeeNotSet();
+
     constructor(
-        address _PYUSDC, // NOTE: Payment token
         address _paymentGateway
     
     ) {
-
-        PYUSDC = _PYUSDC;
         paymentGateway = _paymentGateway;
         _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
@@ -40,6 +44,19 @@ contract PayerClient is IPayer, AccessControl {
         paypalOnChainApi = _paypalOnChainApi;
     }
 
+    function setPayee(
+        bytes32 recipientId,
+        address payee
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        payees[recipientId] = payee;
+    }
+
+    function getPayee(
+        bytes32 recipientId
+    ) external view returns (address) {
+        return payees[recipientId];
+    }
+
 
     function pay(
         address payer,
@@ -50,15 +67,15 @@ contract PayerClient is IPayer, AccessControl {
         bytes[] calldata frompyUSDCToPaypalContractCalls,
         uint256[] calldata values        
        
-    ) external returns (
-        bytes[] memory results
-    ) {
-        uint256 _beforePaymentPayerBalance = IERC20(PYUSDC).balanceOf(
-            payer
-        );
+    ) external {
+
+        if (payees[recipientId] == address(0)) {
+            revert PayeeNotSet();
+        }
 
 
-        bytes[] memory partialRes = IPaymentGateway(paymentGateway).processPayment(
+
+        uint256 amountReceivedForPaymentOnPyUSDC = IPaymentGateway(paymentGateway).processPayment(
             payer,
             paymentToken,
             amountToPay,
@@ -66,31 +83,29 @@ contract PayerClient is IPayer, AccessControl {
         );
 
 
- 
-        // bool success = paymentAmountOnPYUSDC > uint256(0x00) && IERC20(PYUSDC).balanceOf(paymentCalldata.payer) - _beforePaymentPayerBalance >= paymentAmountOnPYUSDC;
-        
-        // if (success) {
-        //     bytes[] memory _results = Multicaller(paypalOnChainApi).aggregate(
-        //         paypalOnChainEndpoints,
-        //         frompyUSDCToPaypalContractCalls,
-        //         values,
-        //         payable(payer)
-        //     );
-        //     emit Payment(
-        //         payer,
-        //         paymentToken,
-        //         recipientId,
-        //         paymentAmountOnPYUSDC,
-        //         bytes("") // NOTE: This is a placeholder
-        //     );
+        emit Payment(
+            payer,
+            paymentToken,
+            recipientId,
+            amountReceivedForPaymentOnPyUSDC,
+            bytes("") // NOTE: This is a placeholder
+        );
 
-        // }
-
-        bytes[] memory results = new bytes[](0);
-
-        return results;
     }
 
+    function receivePayment(
+        bytes32 recipientId
+    ) external {
+
+        address payee = payees[recipientId];
+        IEVault(payee).withdraw(
+            amountReceivedForPaymentOnPyUSDC,
+            payee,
+            paymentGateway
+        );
+
+        emit PaymentReceived(payer, amountReceivedForPaymentOnPyUSDC);
+    }
 
 
 

@@ -24,7 +24,5 @@ interface IPayer {
         address[] calldata paypalOnChainEndpoints,
         bytes[] calldata frompyUSDCToPaypalContractCalls,
         uint256[] calldata values        
-    ) external returns (
-        bytes[] memory results
-    );
+    ) external;
 }

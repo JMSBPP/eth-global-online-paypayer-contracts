@@ -7,18 +7,17 @@ interface IPaymentGateway {
 
     error InsufficientBalance();
 
+    error NoMarketFound();
+
     function processPayment(
         address payer,
         address paymentToken,
         uint256 amountToPay,
         bytes32 recipientId
-    ) external returns(bytes[] memory res);
+    ) external returns(uint256 amountReceivedForPaymentOnPyUSDC);
 
     function setUnitOfAccount(address _unitOfAccount) external;
 
-    function setEulerSwapFactory(
-        address _eulerSwapFactory
-    ) external;
 
     function setGenericFactory(
         address _genericFactory

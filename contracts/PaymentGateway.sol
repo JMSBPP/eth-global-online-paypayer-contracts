@@ -14,13 +14,23 @@ import {IEthereumVaultConnector, IEVC} from "euler-interfaces/IEthereumVaultConn
 
 import {FullMath} from "euler-swap/src/math/FullMath.sol";
 
+import {ISwapRouter} from "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
+import {IPeripheryImmutableState} from "@uniswap/v3-periphery/contracts/interfaces/IPeripheryImmutableState.sol";
+
+import {IQuoter} from "@uniswap/v3-periphery/contracts/interfaces/IQuoter.sol";
+import {TickMath} from "@uniswap/v3-core/contracts/libraries/TickMath.sol";
+
+import {console2} from "forge-std/console2.sol";
+
 contract PaymentGateway is IPaymentGateway{
     address immutable EVAULT_IMPLEMENTATION;
-    address immutable UNDERLYING_TOKEN;
+    address immutable TARGET_TOKEN;
     address immutable EVAULT_FACTORY;
-    address immutable UNSIWAP_V3_ROUTER;
-
-
+    address immutable UNISWAP_V3_SWAP_ROUTER;
+    address immutable UNISWAP_V3_QUOTER;
+    
     address chainPriceOracle;
     address unitOfAccount;
     address genericFactory;
@@ -37,16 +47,19 @@ contract PaymentGateway is IPaymentGateway{
 
     constructor(
         address _evaultImplementation,
-        address _underlyingToken,
+        address _targetToken,
         address _evc,
         address _evaultFactory,
-        address _uniswapV3Router
+        address _uniswapV3SwapRouter,
+        address _uniswapV3Quoter
+    
     ){
         EVAULT_IMPLEMENTATION = _evaultImplementation;
-        UNDERLYING_TOKEN = _underlyingToken;
+        TARGET_TOKEN = _targetToken;
         EVAULT_FACTORY = _evaultFactory;
         evc = payable(_evc);
-        UNSIWAP_V3_ROUTER = _uniswapV3Router;
+        UNISWAP_V3_SWAP_ROUTER = _uniswapV3SwapRouter;
+        UNISWAP_V3_QUOTER = _uniswapV3Quoter;
     }
 
     function setUnitOfAccount(address _unitOfAccount) external{
@@ -81,112 +94,99 @@ contract PaymentGateway is IPaymentGateway{
         address paymentToken,
         uint256 amountToPay,
         bytes32 recipientId
-    ) external returns(bytes[] memory res){
+    ) external returns(uint256 amountReceivedForPaymentOnPyUSDC){
         // NOTE: This is the amount of pyUSDC to pay, the user has not deposited any
         // amount of token yet
-        uint256 amountToPaypyUSDC = IChainPriceOracle(chainPriceOracle).getQuote(
+
+
+        (uint256 amountToPaypyUSDC, uint256 amountToPayUnitOfAccount) = IChainPriceOracle(chainPriceOracle).getQuotes(
             amountToPay,
             paymentToken,
             unitOfAccount
         );
 
+        IERC20(paymentToken).transferFrom(payer, address(this), amountToPay);
+        IERC20(paymentToken).approve(UNISWAP_V3_SWAP_ROUTER, amountToPay);
 
-        (address paymentTokenVault, address pyUSDCVault) = (_getOrCreatePaymentTokenVault(paymentToken), _getOrDeployPyUSDCVault(amountToPaypyUSDC));
 
-        // NOTE: getQuote guaranteees that there is a reliable market for the token that accurately quotes
-        // it against the USDC
+        address paymentTokenUnitOfAccountMarket = 
+            findWorkingFeeAndQuote(paymentToken, amountToPayUnitOfAccount);
 
-        // NOTE: What now needs to be done is to create a market on euler swap for the pair
+        address targetTokenUnitOfAccountMarket = 
+            findWorkingFeeAndQuote(TARGET_TOKEN, amountToPaypyUSDC);
 
-        // (token, pyUSDC), We have as utils (price_{pyUSDC/token} and the pair (pyUSDC, USDC))
-        _getOrCreateEulerSwapMarket(
+        bytes memory path = abi.encodePacked(
             paymentToken,
-            amountToPay,
-            amountToPaypyUSDC,
-            paymentTokenVault,
-            pyUSDCVault
+            IUniswapV3Pool(paymentTokenUnitOfAccountMarket).fee(),
+            unitOfAccount,
+            IUniswapV3Pool(targetTokenUnitOfAccountMarket).fee(),
+            TARGET_TOKEN
         );
 
 
+        ISwapRouter.ExactInputParams memory internalSwapPayment = ISwapRouter.ExactInputParams({
+            path: path,
+            recipient: address(this),
+            deadline: block.timestamp + 300,
+            amountIn: amountToPay,
+            amountOutMinimum: 0
+        });
+
+        uint256 amountReceivedForPaymentOnPyUSDC = ISwapRouter(UNISWAP_V3_SWAP_ROUTER).exactInput(internalSwapPayment);
+
+        address pyUSDCVault = _getOrCreateEscrowVault(TARGET_TOKEN);
+
+        IERC20(TARGET_TOKEN).approve(pyUSDCVault, amountReceivedForPaymentOnPyUSDC);
+
+        IEVault(pyUSDCVault).deposit(amountReceivedForPaymentOnPyUSDC, address(this));
 
 
 
-        // NOTE: Here we do the swap
+
+        return amountReceivedForPaymentOnPyUSDC;
     
-
-
-
-        // NOTE: The paymentTokenVault is now enabled as collateral for the pyUSDCVault
-        // and 
-
-
-
-        
-
-    }
-
-    function _getOrCreateEulerSwapMarket(
-        address _paymentToken,
-        uint256 _amountToPay,
-        uint256 _amountToPaypyUSDC,
-        address _paymentTokenVault,
-        address _pyUSDCVault
-    ) private returns (address _eulerSwapPool){
-        IEulerSwap.StaticParams memory marketMetadata = IEulerSwap.StaticParams({
-            supplyVault0: _paymentTokenVault,
-            supplyVault1: _pyUSDCVault,
-            borrowVault0: address(0x00),
-            borrowVault1: address(0x00),
-            eulerAccount: address(this),
-            feeRecipient: address(this),
-            protocolFeeRecipient: address(this),
-            protocolFee: 0 // TODO: This is to be determined
-        });
-
-        uint256 priceX = FullMath.mulDiv(1e18, _amountToPaypyUSDC, _amountToPay);
-
-        IEulerSwap.DynamicParams memory marketDynamicParams = IEulerSwap.DynamicParams({
-            equilibriumReserve0: _amountToPay,
-            equilibriumReserve1: _amountToPaypyUSDC,
-            minReserve0: 0,
-            minReserve1: 0,
-            priceX: 1e18,
-            priceY: 1e18,
-            concentrationX: 1e18,
-            concentrationY: 1e18,
-            fee0: 0,
-            fee1: 0,
-            expiration: 0,
-            swapHookedOperations: 0,
-            swapHook: address(0x00)
-        });
-
-
     }
 
 
-
-    function _depositCollateral(
-        address _paymentToken,
-        address _paymentTokenVault,
-        address _payer,
-        uint256 _amountToPay
-    ) private{
-           // NOTE: Transfer the payment token from the payer to this contract
-        IERC20(_paymentToken).transferFrom(_payer, address(this), _amountToPay);
+    function findWorkingFeeAndQuote(
+        address _token,
+        uint256 _amount
+    ) public returns (address _pool){
         
-        // NOTE: Approve the vault to spend the tokens
-        IERC20(_paymentToken).approve(_paymentTokenVault, _amountToPay);
+        uint24[3] memory fees = [uint24(3000), uint24(500), uint24(100)];
+        uint128 maxLiquidityOnRange;
+        unchecked {
+            uint256 index;
+            for (index = 0; index < fees.length; index++) {
+                address currentPool = IUniswapV3Factory(
+                    IPeripheryImmutableState(UNISWAP_V3_QUOTER).factory()
+                ).getPool(
+                    _token,
+                    unitOfAccount,
+                    fees[index]
+                );
 
-        // NOTE: Now we need to deposit the collateral that the payer holds
-        IEVault(_paymentTokenVault).deposit(_amountToPay, address(this));
+                (,int24 currentTick,,,,,) = IUniswapV3Pool(currentPool).slot0();
+                (uint128 currentPoolLiquidityOnRange,,,,,,,) = IUniswapV3Pool(currentPool).ticks(currentTick);
+                if (currentPoolLiquidityOnRange > maxLiquidityOnRange) {
+                    maxLiquidityOnRange = currentPoolLiquidityOnRange;
+                    _pool = currentPool;
+                }
+
+            }
+        }
+
+        if (maxLiquidityOnRange == 0) {
+            revert NoMarketFound();
+        }
+
+        return _pool;
 
     
     }
 
 
-
-    function _getOrCreateEscrowVaultVault(
+    function _getOrCreateEscrowVault(
         address _underlyingToken
     ) internal returns (address _escrowVault) {
 
@@ -197,7 +197,7 @@ contract PaymentGateway is IPaymentGateway{
 
         // NOTE: This token has not been used as payment yet
 
-        if (paymentTokenVault == address(0x00)) {
+        if (_escrowVault == address(0x00)) {
             _escrowVault = GenericFactory(genericFactory).createProxy(
                     address(0),
                     true,
@@ -224,7 +224,6 @@ contract PaymentGateway is IPaymentGateway{
                 escrowedCollateralPerspective
              ).perspectiveVerify(_escrowVault, true);
 
-             escrowVault = _escrowVault;
 
         }
         

@@ -100,30 +100,33 @@ contract ChainPriceOracle is IChainPriceOracle {
         uint256 inAmount,
         address paymentToken
     ) external view returns (uint256 outAmount){
-        return _getQuote(inAmount, paymentToken);
+        (uint256 outAmountOfBase, uint256 outAmountOfUnitOfAccount) = _getQuote(inAmount, paymentToken);
+        return outAmountOfBase;
     }
 
     function _getQuote(
         uint256 inAmount,
         address base
-    ) internal view returns(uint256 outAmount){
+    ) internal view returns(uint256 outAmountOfBase, uint256 outAmountOfUnitOfAccount){
         bytes32 baseFeedId =  _validateAndGetBaseTokenFeedId(base);
         uint256 amountOutUnitOfAccount = _processQuote(baseFeedId, base, unitOfAccount, inAmount);
         uint256 amountOutUnitOfAccountToken = _processQuote(unitOfAccountTokenFeedId, unitOfAccount, unitOfAccountToken, amountOutUnitOfAccount);
-        outAmount = IPriceOracle(paymentOracle).getQuote(
+        outAmountOfBase = IPriceOracle(paymentOracle).getQuote(
             amountOutUnitOfAccount,
             unitOfAccountToken,
             paymentToken
        );
+
+       outAmountOfUnitOfAccount = amountOutUnitOfAccountToken;
+
+
     
     }
-
-
 
     // NOTE: This is the version that is required for the IPriceOracle interface
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256 outAmount){
-        return _getQuote(inAmount, base);        
+        return this.getQuote(inAmount, base);        
     }
 
     function _validateAndGetBaseTokenFeedId(address _base) private view returns (bytes32 baseFeedId) {
@@ -192,7 +195,11 @@ contract ChainPriceOracle is IChainPriceOracle {
 
     }
 
-    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256 bid, uint256 ask){}
+    function getQuotes(uint256 inAmount, address base, address quote) external view returns (uint256 bid, uint256 ask){
+        (uint256 outAmountOfBase, uint256 outAmountOfUnitOfAccount) = _getQuote(inAmount, base);
+        bid = outAmountOfBase;
+        ask = outAmountOfUnitOfAccount;
+    }
 
 
 
