@@ -31,3 +31,6 @@
 [submodule "lib/foundational-hooks"]
 	path = lib/foundational-hooks
 	url = https://github.com/uniswapFoundation/foundational-hooks
+[submodule "lib/foundry-devops"]
+	path = lib/foundry-devops
+	url = https://github.com/Cyfrin/foundry-devops

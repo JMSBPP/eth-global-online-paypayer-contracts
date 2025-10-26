@@ -1,33 +1,6 @@
 {
-  "lib/v3-periphery": {
-    "tag": {
-      "name": "v1.3.0",
-      "rev": "80f26c86c57b8a5e4b913f42844d4c8bd274d058"
-    }
-  },
   "lib/euler-swap": {
     "rev": "08e498ab2e74977f67647da368e314ac407c748d"
-  },
-  "lib/openzeppelin-contracts": {
-    "tag": {
-      "name": "v5.4.0",
-      "rev": "c64a1edb67b6e3f4a15cca8909c9482ad33a02b0"
-    }
-  },
-  "lib/multicaller": {
-    "tag": {
-      "name": "v1.3.2",
-      "rev": "b7ef620605f426a93406248dcb005f6cead30673"
-    }
-  },
-  "lib/v4-periphery": {
-    "rev": "7ebd04b161745b75ed0c24ba2df3bc7c25f65606"
-  },
-  "lib/euler-vault-kit": {
-    "rev": "5b98b42048ba11ae82fb62dfec06d1010c8e41e6"
-  },
-  "lib/scaffold-balancer-v3": {
-    "rev": "eda5171fb64c10d87afa988b86e061ec275f0430"
   },
   "lib/morpho-blue": {
     "tag": {
@@ -35,14 +8,50 @@
       "rev": "55d2d99304fb3fb930c688462ae2ccabb1d533ad"
     }
   },
-  "lib/euler-interfaces": {
-    "rev": "7d4fa5cccd4e3f752c0f975056865864444f1d2d"
+  "lib/euler-vault-scripts": {
+    "rev": "2ab9ab124d166c6caf745ad48e981f47f4b445b8"
+  },
+  "lib/openzeppelin-contracts": {
+    "tag": {
+      "name": "v5.4.0",
+      "rev": "c64a1edb67b6e3f4a15cca8909c9482ad33a02b0"
+    }
   },
   "lib/balancer-v3-monorepo": {
     "rev": "15fec8cd044762942b8ebc357a5594e265096ba5"
   },
-  "lib/euler-vault-scripts": {
-    "rev": "2ab9ab124d166c6caf745ad48e981f47f4b445b8"
+  "lib/v3-periphery": {
+    "tag": {
+      "name": "v1.3.0",
+      "rev": "80f26c86c57b8a5e4b913f42844d4c8bd274d058"
+    }
+  },
+  "lib/euler-vault-kit": {
+    "rev": "5b98b42048ba11ae82fb62dfec06d1010c8e41e6"
+  },
+  "lib/multicaller": {
+    "tag": {
+      "name": "v1.3.2",
+      "rev": "b7ef620605f426a93406248dcb005f6cead30673"
+    }
+  },
+  "lib/euler-interfaces": {
+    "rev": "7d4fa5cccd4e3f752c0f975056865864444f1d2d"
+  },
+  "lib/foundational-hooks": {
+    "rev": "0c62b3fb35aaaa91296df78026f221b7ffc644de"
+  },
+  "lib/v4-periphery": {
+    "rev": "7ebd04b161745b75ed0c24ba2df3bc7c25f65606"
+  },
+  "lib/scaffold-balancer-v3": {
+    "rev": "eda5171fb64c10d87afa988b86e061ec275f0430"
+  },
+  "lib/foundry-devops": {
+    "tag": {
+      "name": "0.4.0",
+      "rev": "efff097a87e70c3d15661c9f2a2daeae0b33d5d5"
+    }
   },
   "lib/evk-periphery": {
     "rev": "292c97d6c9d95be1865d62b4cd0a149c8feb08c3"

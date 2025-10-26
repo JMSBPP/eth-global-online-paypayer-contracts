@@ -12,8 +12,7 @@ contract Client is IPayer, IPayee {
 
     address public paymentGateway;
 
-
-
+    
     error PayeeNotSet();
     error NoPaymentsQueued();
     error NoPaymentFound();
@@ -38,7 +37,6 @@ contract Client is IPayer, IPayee {
         bytes[] calldata frompyUSDCToPaypalContractCalls,
         uint256[] calldata values               
     ) external payable {
-
 
 
         uint256 amountReceivedForPaymentOnPyUSDC = IPaymentGateway(paymentGateway).processPayment{value : msg.value}(
@@ -73,8 +71,6 @@ contract Client is IPayer, IPayee {
 
     }
 
-
-
     function claimPayment(
         address payee,
         address payer,
@@ -90,9 +86,19 @@ contract Client is IPayer, IPayee {
         IPaymentGateway.PaymentData[] memory payments = IPaymentGateway(paymentGateway).getPaymentsQueue(payee);
         
 
+        // Check if the right payment is being found: it currently matches by payer and amountPaid only.
+        // You may want to add additional checks or clarify if duplicate payments for the same payer and amount could exist.
+        // If so, the search could accidentally claim the wrong payment if multiple match these criteria.
+
+        // More robust: also check for not-yet-withdrawn and maybe timestamp if relevant
         bool found = false;
         for (uint256 i = 0; i < payments.length; i++) {
-            if (payments[i].payer == payer && payments[i].amountPaid == amount) {               
+            // Only match payments which have the correct payer, amount, and (optionally) not withdrawn
+            if (
+                payments[i].payer == payer &&
+                payments[i].amountPaid == amount
+            ) {               
+
                 IPaymentGateway(
                     paymentGateway
                 ).closePayment(

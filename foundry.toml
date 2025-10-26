@@ -4,7 +4,13 @@ out = "foundry-out"
 libs = ["lib","node_modules"]
 solc_version = '0.8.30'
 evm_version = 'prague'
+ffi= true
 
+
+fs_permissions = [
+    { access = "read", path = "./broadcast" },
+    { access = "read", path = "./reports" },
+]
 
 remappings = [
     "@pythnetwork/pyth-sdk-solidity/=node_modules/@pythnetwork/pyth-sdk-solidity",

@@ -2,6 +2,10 @@
 pragma solidity ^0.8.27;
 
 
+
+// NOTE: This is intended to be called by payPal API to claim payments and 
+// in pyUSDC and convert them to USD balance within the payPal app
+
 interface IPayee {
     
     event PaymentClaimed(
@@ -18,7 +22,6 @@ interface IPayee {
         address destination
     ) external;
 
-    
 
 
     function hasQueuedPayments(

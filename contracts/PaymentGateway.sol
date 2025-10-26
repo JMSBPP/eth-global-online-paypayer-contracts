@@ -177,7 +177,8 @@ contract PaymentGateway is IPaymentGateway, AccessControl{
 
         IERC20(TARGET_TOKEN).approve(treasury, amountReceivedForPaymentOnPyUSDC);
 
-        IEVault(treasury).deposit(amountReceivedForPaymentOnPyUSDC, payee);
+        IEVault(treasury).deposit(amountReceivedForPaymentOnPyUSDC, address(this)); // Deposit on behalf of PaymentGateway
+        // Don't transfer shares - keep them with PaymentGateway
         
         paymentsQueue[payee].push(PaymentData({
             payer: payer,
@@ -199,7 +200,7 @@ contract PaymentGateway is IPaymentGateway, AccessControl{
         IEVault(treasury).withdraw(
             paymentsQueue[payee][index].amountPaid,
             destination,
-            payee
+            address(this) // Withdraw on behalf of PaymentGateway (who owns the shares)
         );
 
         delete paymentsQueue[payee][index];
@@ -207,7 +208,7 @@ contract PaymentGateway is IPaymentGateway, AccessControl{
 
     function getPaymentsQueue(
         address payee
-    ) external view onlyRole(PAYMENT_CLIENT_ROLE) returns (PaymentData[] memory payments) {
+    ) external view returns (PaymentData[] memory payments) {
         return paymentsQueue[payee];
     }
 

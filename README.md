@@ -1,13 +1,31 @@
-# ETH Global Online - Payment Gateway
+# Papaya Contracts
+
+## Quick Start
+
+```bash
+# Install dependencies
+make install
+
+# Run tests
+make test
+
+# Deploy contracts
+cp env.example .env
+# Edit .env with your keys
+make deploy
+
+# Make a payment
+make pay PAYER=0x... PAYMENT_TOKEN=0x... AMOUNT=1000000000000000000 PAYEE=0x...
+```
 
 ## Deployed Contracts (Mainnet)
 
 | Contract | Address | Etherscan |
 |----------|---------|-----------|
-| UniswapV3Oracle | `0xc6b4617c1781065d31d83ae2b37c3380a75997af` | [View on Etherscan](https://etherscan.io/address/0xc6b4617c1781065d31d83ae2b37c3380a75997af) |
-| ChainPriceOracle | `0xfca85fb05db96070ef336136fe8ca9c6a3853de1` | [View on Etherscan](https://etherscan.io/address/0xfca85fb05db96070ef336136fe8ca9c6a3853de1) |
-| PaymentGateway | `0x3abed3335da4cbca36938d094b77d52477fbf60c` | [View on Etherscan](https://etherscan.io/address/0x3abed3335da4cbca36938d094b77d52477fbf60c) |
-| Client | `0x72c21100bb512aeefb4afc11048e100a00dc4dc1` | [View on Etherscan](https://etherscan.io/address/0x72c21100bb512aeefb4afc11048e100a00dc4dc1) |
+| UniswapV3Oracle | `0x8fff822893486c999831514b194773e02a08695b` | [View on Etherscan](https://etherscan.io/address/0x8fff822893486c999831514b194773e02a08695b) |
+| ChainPriceOracle | `0x6fc13169c426a1f4027a5c1388ff17ae183bbbca` | [View on Etherscan](https://etherscan.io/address/0x6fc13169c426a1f4027a5c1388ff17ae183bbbca) |
+| PaymentGateway | `0x5c9475e14b7a4857e460702764c4d5186ffd697d` | [View on Etherscan](https://etherscan.io/address/0x5c9475e14b7a4857e460702764c4d5186ffd697d) |
+| Client | `0xd3335a63df9a3133fc313b1306fdd48612d7fd98` | [View on Etherscan](https://etherscan.io/address/0xd3335a63df9a3133fc313b1306fdd48612d7fd98) |
 
 ## Features
 
